@@ -1,0 +1,13 @@
+name: pretty_diff_text
+description: PrettyDiffText is wrapper of RichText which shows differences between two texts visually. It uses Google's diff-match-patch library.
+version: 1.0.0
+homepage: https://github.com/zmeid/pretty-diff-text
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+  flutter: ">=1.17.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  diff_match_patch: ^0.4.1
