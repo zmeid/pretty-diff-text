@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:pretty_diff_text/pretty_diff_text.dart';
 
 void main() {
@@ -240,7 +239,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ScaffoldMessenger.of(context).clearSnackBars();
       return response;
     } catch (e) {
-      WidgetsBinding.instance?.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter a valid double value for edit cost")));
       });
       return 1.0; // default value for timeout
@@ -253,7 +252,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ScaffoldMessenger.of(context).clearSnackBars();
       return response;
     } catch (e) {
-      WidgetsBinding.instance?.addPostFrameCallback((_) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter a valid integer value for edit cost")));
       });
       return 4; // default value for edit cost
