@@ -185,8 +185,10 @@ class PrettyDiffText extends StatelessWidget {
       case DIFF_DELETE:
         return PrettyDiffOp.DELETE;
       case DIFF_EQUAL:
-      default:
         return PrettyDiffOp.EQUAL;
+      default:
+        throw "Unknown DiffCleanupType. DiffCleanupType should be one of: "
+            "[SEMANTIC], [EFFICIENCY] or [NONE].";
     }
   }
 
