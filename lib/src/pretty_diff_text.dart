@@ -31,7 +31,7 @@ class PrettyDiffText extends StatelessWidget {
   final TextHeightBehavior? textHeightBehavior;
   late final List<TextSpan> textSpans;
 
-  /// Creates a PrettyDiffText widget that computes the differences between two strings.
+  /// Creates a PrettyDiffText widget that computes the differences between two texts.
   ///
   /// The [oldText] is the original text to compare against.
   /// The [newText] is the modified text to compare with.
@@ -50,6 +50,18 @@ class PrettyDiffText extends StatelessWidget {
   ///
   /// The [diffEditCost] affects cleanup when using [DiffCleanupType.EFFICIENCY]. Higher values result in
   /// more aggressive cleanup.
+  ///
+  /// The following properties are passed directly to the underlying [RichText] widget:
+  /// - [textAlign]: How the text should be aligned horizontally.
+  /// - [textDirection]: The directionality of the text.
+  /// - [softWrap]: Whether the text should break at soft line breaks.
+  /// - [overflow]: How visual overflow should be handled.
+  /// - [textScaleFactor]: The number of font pixels for each logical pixel.
+  /// - [maxLines]: An optional maximum number of lines for the text to span.
+  /// - [locale]: Used to select region-specific glyphs and formatting.
+  /// - [strutStyle]: Defines the strut, which sets minimum vertical layout metrics.
+  /// - [textWidthBasis]: Defines how to measure the width of the rendered text.
+  /// - [textHeightBehavior]: Defines how the paragraph will apply TextStyle.height to the ascent of the first line and descent of the last line.
   PrettyDiffText({
     Key? key,
     required String oldText,
