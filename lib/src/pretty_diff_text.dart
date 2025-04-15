@@ -2,13 +2,10 @@ import 'package:diff_match_patch/diff_match_patch.dart';
 import 'package:flutter/material.dart';
 import 'package:pretty_diff_text/src/diff_cleanup_type.dart';
 
+import 'pretty_diff.dart';
+import 'pretty_diff_op.dart';
+
 class PrettyDiffText extends StatelessWidget {
-  /// The original text which is going to be compared with [newText].
-  final String oldText;
-
-  /// Edited text which is going to be compared with [oldText].
-  final String newText;
-
   /// Default text style of RichText. Mainly will be used for the text which did not change.
   /// [addedTextStyle] and [deletedTextStyle] will inherit styles from it.
   final TextStyle defaultTextStyle;
@@ -18,22 +15,6 @@ class PrettyDiffText extends StatelessWidget {
 
   /// Text style of text which was deleted.
   final TextStyle deletedTextStyle;
-
-  /// See [DiffCleanupType] for types.
-  final DiffCleanupType diffCleanupType;
-
-  /// If the mapping phase of the diff computation takes longer than this,
-  /// then the computation is truncated and the best solution to date is
-  /// returned. While guaranteed to be correct, it may not be optimal.
-  /// A timeout of '0' allows for unlimited computation.
-  /// The default value is 1.0.
-  final double diffTimeout;
-
-  /// Cost of an empty edit operation in terms of edit characters.
-  /// This value is used when [DiffCleanupType] is selected as [DiffCleanupType.EFFICIENCY]
-  /// The larger the edit cost, the more aggressive the cleanup.
-  /// The default value is 4.
-  final int diffEditCost;
 
   /// !!! DERIVED PROPERTIES FROM FLUTTER'S [RichText] IN ORDER TO ALLOW CUSTOMIZABILITY !!!
   /// See [RichText] for documentation.
@@ -48,11 +29,32 @@ class PrettyDiffText extends StatelessWidget {
   final StrutStyle? strutStyle;
   final TextWidthBasis textWidthBasis;
   final TextHeightBehavior? textHeightBehavior;
+  late final List<TextSpan> textSpans;
 
-  const PrettyDiffText({
+  /// Creates a PrettyDiffText widget that computes the differences between two strings.
+  ///
+  /// The [oldText] is the original text to compare against.
+  /// The [newText] is the modified text to compare with.
+  ///
+  /// The [diffCleanupType] determines how the diff results are cleaned up:
+  /// - [DiffCleanupType.SEMANTIC]: Reduces the number of edits by eliminating semantically trivial equalities (default)
+  /// - [DiffCleanupType.EFFICIENCY]: Reduces the number of edits by eliminating operationally trivial equalities
+  /// - [DiffCleanupType.NONE]: No cleanup, raw diff output
+  ///
+  /// The [defaultTextStyle] is applied to unchanged text.
+  /// The [addedTextStyle] is applied to text that was added (present in [newText] but not in [oldText]).
+  /// The [deletedTextStyle] is applied to text that was deleted (present in [oldText] but not in [newText]).
+  ///
+  /// The [diffTimeout] limits computation time in seconds. If the mapping phase takes longer than this,
+  /// computation is truncated and returns the best solution found. A value of 0 allows unlimited computation.
+  ///
+  /// The [diffEditCost] affects cleanup when using [DiffCleanupType.EFFICIENCY]. Higher values result in
+  /// more aggressive cleanup.
+  PrettyDiffText({
     Key? key,
-    required this.oldText,
-    required this.newText,
+    required String oldText,
+    required String newText,
+    DiffCleanupType diffCleanupType = DiffCleanupType.SEMANTIC,
     this.defaultTextStyle = const TextStyle(color: Colors.black),
     this.addedTextStyle = const TextStyle(
       backgroundColor: Color.fromARGB(255, 139, 197, 139),
@@ -61,9 +63,8 @@ class PrettyDiffText extends StatelessWidget {
       backgroundColor: Color.fromARGB(255, 255, 129, 129),
       decoration: TextDecoration.lineThrough,
     ),
-    this.diffTimeout = 1.0,
-    this.diffCleanupType = DiffCleanupType.SEMANTIC,
-    this.diffEditCost = 4,
+    double diffTimeout = 1.0,
+    int diffEditCost = 4,
     this.textAlign = TextAlign.start,
     this.textDirection,
     this.softWrap = true,
@@ -74,24 +75,65 @@ class PrettyDiffText extends StatelessWidget {
     this.strutStyle,
     this.textWidthBasis = TextWidthBasis.parent,
     this.textHeightBehavior,
-  }) : super(key: key);
+  }) : super(key: key) {
+    final dmp = DiffMatchPatch()
+      ..diffTimeout = diffTimeout
+      ..diffEditCost = diffEditCost;
+
+    final diffs = dmp.diff(oldText, newText);
+    _cleanupDiffs(dmp, diffs, diffCleanupType);
+
+    textSpans = _textSpansFromDiffs([
+      for (final diff in diffs)
+        PrettyDiff(
+          text: diff.text,
+          operation: _prettyDiffOpFromDiffOp(diff.operation),
+        )
+    ]);
+  }
+
+  /// Creates a PrettyDiffText widget with pre-computed diffs.
+  ///
+  /// The [diffs] parameter should contain the pre-computed differences between two texts.
+  /// This constructor is useful when you've already computed the diffs elsewhere or
+  /// need to apply custom diff processing before displaying.
+  ///
+  /// The [defaultTextStyle] is applied to unchanged text.
+  /// The [addedTextStyle] is applied to text that was added.
+  /// The [deletedTextStyle] is applied to text that was deleted.
+  ///
+  /// The [diffTimeout] and [diffEditCost] parameters are included for API consistency
+  /// but are not used in this constructor since diffs are pre-computed.
+  ///
+  /// The remaining parameters control the text rendering behavior and are passed
+  /// directly to the underlying [RichText] widget.
+  PrettyDiffText.withDiffs({
+    Key? key,
+    required List<PrettyDiff> diffs,
+    this.defaultTextStyle = const TextStyle(color: Colors.black),
+    this.addedTextStyle = const TextStyle(
+      backgroundColor: Color.fromARGB(255, 139, 197, 139),
+    ),
+    this.deletedTextStyle = const TextStyle(
+      backgroundColor: Color.fromARGB(255, 255, 129, 129),
+      decoration: TextDecoration.lineThrough,
+    ),
+    this.textAlign = TextAlign.start,
+    this.textDirection,
+    this.softWrap = true,
+    this.overflow = TextOverflow.clip,
+    this.textScaleFactor = 1.0,
+    this.maxLines,
+    this.locale,
+    this.strutStyle,
+    this.textWidthBasis = TextWidthBasis.parent,
+    this.textHeightBehavior,
+  }) : super(key: key) {
+    textSpans = _textSpansFromDiffs(diffs);
+  }
 
   @override
   Widget build(BuildContext context) {
-    DiffMatchPatch dmp = DiffMatchPatch();
-    dmp.diffTimeout = diffTimeout;
-    dmp.diffEditCost = diffEditCost;
-    List<Diff> diffs = dmp.diff(oldText, newText);
-
-    cleanupDiffs(dmp, diffs);
-
-    final textSpans = List<TextSpan>.empty(growable: true);
-
-    diffs.forEach((diff) {
-      TextStyle? textStyle = getTextStyleByDiffOperation(diff);
-      textSpans.add(TextSpan(text: diff.text, style: textStyle));
-    });
-
     return RichText(
       text: TextSpan(
         text: '',
@@ -111,23 +153,18 @@ class PrettyDiffText extends StatelessWidget {
     );
   }
 
-  TextStyle getTextStyleByDiffOperation(Diff diff) {
-    switch (diff.operation) {
-      case DIFF_INSERT:
-        return addedTextStyle;
+  TextStyle _getTextStyleByDiffOperation(PrettyDiff diff) =>
+      switch (diff.operation) {
+        PrettyDiffOp.INSERT => addedTextStyle,
+        PrettyDiffOp.DELETE => deletedTextStyle,
+        PrettyDiffOp.EQUAL => defaultTextStyle,
+      };
 
-      case DIFF_DELETE:
-        return deletedTextStyle;
-
-      case DIFF_EQUAL:
-        return defaultTextStyle;
-
-      default:
-        throw "Unknown diff operation. Diff operation should be one of: [DIFF_INSERT], [DIFF_DELETE] or [DIFF_EQUAL].";
-    }
-  }
-
-  void cleanupDiffs(DiffMatchPatch dmp, List<Diff> diffs) {
+  void _cleanupDiffs(
+    DiffMatchPatch dmp,
+    List<Diff> diffs,
+    DiffCleanupType diffCleanupType,
+  ) {
     switch (diffCleanupType) {
       case DiffCleanupType.SEMANTIC:
         dmp.diffCleanupSemantic(diffs);
@@ -138,8 +175,23 @@ class PrettyDiffText extends StatelessWidget {
       case DiffCleanupType.NONE:
         // No clean up, do nothing.
         break;
-      default:
-        throw "Unknown DiffCleanupType. DiffCleanupType should be one of: [SEMANTIC], [EFFICIENCY] or [NONE].";
     }
   }
+
+  PrettyDiffOp _prettyDiffOpFromDiffOp(int diffOp) {
+    switch (diffOp) {
+      case DIFF_INSERT:
+        return PrettyDiffOp.INSERT;
+      case DIFF_DELETE:
+        return PrettyDiffOp.DELETE;
+      case DIFF_EQUAL:
+      default:
+        return PrettyDiffOp.EQUAL;
+    }
+  }
+
+  List<TextSpan> _textSpansFromDiffs(List<PrettyDiff> diffs) => [
+        for (final diff in diffs)
+          TextSpan(text: diff.text, style: _getTextStyleByDiffOperation(diff))
+      ];
 }

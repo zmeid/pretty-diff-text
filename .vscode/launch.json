@@ -1,0 +1,19 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "example",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "example",
+      "program": "lib/main.dart"
+    },
+    {
+      "name": "precalc diffs",
+      "request": "launch",
+      "type": "dart",
+      "cwd": "example",
+      "program": "lib/precalc_diffs.dart"
+    }
+  ]
+}
