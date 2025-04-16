@@ -121,7 +121,7 @@ class PrettyDiffText extends StatelessWidget {
   /// directly to the underlying [RichText] widget.
   PrettyDiffText.withDiffs({
     Key? key,
-    required List<PrettyDiff> diffs,
+    required Iterable<PrettyDiff> diffs,
     this.defaultTextStyle = const TextStyle(color: Colors.black),
     this.addedTextStyle = const TextStyle(
       backgroundColor: Color.fromARGB(255, 139, 197, 139),
@@ -204,7 +204,7 @@ class PrettyDiffText extends StatelessWidget {
     }
   }
 
-  List<TextSpan> _textSpansFromDiffs(List<PrettyDiff> diffs) => [
+  List<TextSpan> _textSpansFromDiffs(Iterable<PrettyDiff> diffs) => [
         for (final diff in diffs)
           TextSpan(text: diff.text, style: _getTextStyleByDiffOperation(diff))
       ];
