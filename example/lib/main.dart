@@ -6,6 +6,8 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -20,12 +22,12 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
@@ -41,7 +43,8 @@ class _MyHomePageState extends State<MyHomePage> {
     _newTextEditingController = TextEditingController();
     _diffTimeoutEditingController = TextEditingController();
     _editCostEditingController = TextEditingController();
-    _oldTextEditingController.text = "Let's go to Hatay and eat something delicious. Because everything there is super delicious";
+    _oldTextEditingController.text =
+        "Let's go to Hatay and eat something delicious. Because everything there is super delicious";
     _newTextEditingController.text =
         "Let's go to Antakya eat something very delicious and unique. Because everything(especially kebabs and kunefe) super delicious!!!";
     _diffTimeoutEditingController.text = "1.0";
@@ -129,7 +132,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           textAlign: TextAlign.center,
                           oldText: _oldTextEditingController.text,
                           newText: _newTextEditingController.text,
-                          diffCleanupType: _diffCleanupType ?? DiffCleanupType.SEMANTIC,
+                          diffCleanupType:
+                              _diffCleanupType ?? DiffCleanupType.SEMANTIC,
                           diffTimeout: diffTimeoutToDouble(),
                           diffEditCost: editCostToDouble(),
                         ),
@@ -179,7 +183,8 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             RadioListTile(
                 title: Text("Semantic Cleanup"),
-                subtitle: Text("Increase human readability by factoring out commonalities which are likely to be coincidental"),
+                subtitle: Text(
+                    "Increase human readability by factoring out commonalities which are likely to be coincidental"),
                 value: DiffCleanupType.SEMANTIC,
                 groupValue: _diffCleanupType,
                 onChanged: (DiffCleanupType? value) {
@@ -240,7 +245,8 @@ class _MyHomePageState extends State<MyHomePage> {
       return response;
     } catch (e) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter a valid double value for edit cost")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Enter a valid double value for edit cost")));
       });
       return 1.0; // default value for timeout
     }
@@ -253,7 +259,8 @@ class _MyHomePageState extends State<MyHomePage> {
       return response;
     } catch (e) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Enter a valid integer value for edit cost")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text("Enter a valid integer value for edit cost")));
       });
       return 4; // default value for edit cost
     }

@@ -11,4 +11,7 @@ dependencies:
   pretty_diff_text:
     path: ../
   diff_match_patch: ^0.4.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
   
