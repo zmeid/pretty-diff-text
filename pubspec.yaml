@@ -1,6 +1,6 @@
 name: pretty_diff_text
-description: PrettyDiffText is wrapper of RichText which shows differences between two texts visually. It uses Google's diff-match-patch library.
-version: 2.0.0
+description: PrettyDiffText is wrapper of RichText which shows differences between two texts visually. It uses Google's diff-match-patch library by default.
+version: 2.1.0
 homepage: https://github.com/zmeid/pretty-diff-text
 
 environment:

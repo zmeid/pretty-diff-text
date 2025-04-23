@@ -2,8 +2,6 @@ name: example
 description: Demo of PrettyDiffText
 publish_to: 'none'
 
-version: 2.0.0
-
 environment:
   sdk: ">=3.2.0-0 <4.0.0"
 
@@ -12,3 +10,8 @@ dependencies:
     sdk: flutter
   pretty_diff_text:
     path: ../
+  diff_match_patch: ^0.4.1
+
+dev_dependencies:
+  flutter_lints: ^5.0.0
+  

@@ -1,3 +1,4 @@
+import 'package:diff_match_patch/diff_match_patch.dart';
 import 'package:flutter/material.dart';
 import 'package:pretty_diff_text/pretty_diff_text.dart';
 
@@ -6,17 +7,19 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
+  final title = 'Demo of PrettyDiffText with Precalculated Diffs';
+
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Demo of PrettyDiffText',
+      title: title,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Demo of PrettyDiffText'),
+      home: MyHomePage(title: title),
     );
   }
 }
@@ -128,14 +131,16 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       Center(
-                        child: PrettyDiffText(
+                        child: PrettyDiffText.withDiffs(
                           textAlign: TextAlign.center,
-                          oldText: _oldTextEditingController.text,
-                          newText: _newTextEditingController.text,
-                          diffCleanupType:
-                              _diffCleanupType ?? DiffCleanupType.SEMANTIC,
-                          diffTimeout: diffTimeoutToDouble(),
-                          diffEditCost: editCostToDouble(),
+                          diffs: _getDiffs(
+                            oldText: _oldTextEditingController.text,
+                            newText: _newTextEditingController.text,
+                            diffCleanupType:
+                                _diffCleanupType ?? DiffCleanupType.SEMANTIC,
+                            diffTimeout: diffTimeoutToDouble(),
+                            diffEditCost: editCostToDouble(),
+                          ),
                         ),
                       ),
                     ],
@@ -263,6 +268,51 @@ class _MyHomePageState extends State<MyHomePage> {
             content: Text("Enter a valid integer value for edit cost")));
       });
       return 4; // default value for edit cost
+    }
+  }
+
+  List<PrettyDiff> _getDiffs(
+      {required String oldText,
+      required String newText,
+      required DiffCleanupType diffCleanupType,
+      required double diffTimeout,
+      required int diffEditCost}) {
+    final dmp = DiffMatchPatch()
+      ..diffTimeout = diffTimeout
+      ..diffEditCost = diffEditCost;
+
+    final diffs = dmp.diff(oldText, newText);
+    switch (diffCleanupType) {
+      case DiffCleanupType.SEMANTIC:
+        dmp.diffCleanupSemantic(diffs);
+        break;
+      case DiffCleanupType.EFFICIENCY:
+        dmp.diffCleanupEfficiency(diffs);
+        break;
+      case DiffCleanupType.NONE:
+        // No clean up, do nothing.
+        break;
+    }
+
+    return diffs
+        .map((diff) => PrettyDiff(
+              text: diff.text,
+              operation: _prettyDiffOpFromDiffOp(diff.operation),
+            ))
+        .toList();
+  }
+
+  PrettyDiffOp _prettyDiffOpFromDiffOp(int diffOp) {
+    switch (diffOp) {
+      case DIFF_INSERT:
+        return PrettyDiffOp.INSERT;
+      case DIFF_DELETE:
+        return PrettyDiffOp.DELETE;
+      case DIFF_EQUAL:
+        return PrettyDiffOp.EQUAL;
+      default:
+        throw "Unknown DiffCleanupType. DiffCleanupType should be one of: "
+            "[SEMANTIC], [EFFICIENCY] or [NONE].";
     }
   }
 }
